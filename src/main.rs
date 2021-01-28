@@ -78,6 +78,15 @@ fn main() {
 
     prepScreen();
 
+    let mut ch: i32 = getch();
+
+    while ch != 113 {
+
+        ch = getch();
+        
+
+    }
+
     for i in 0 .. snakey.coords.iter().count() {
 
         let coord_stri: String = format!("x: {}, y: {}", snakey.coords[i].xcoord, snakey.coords[i].ycoord);
