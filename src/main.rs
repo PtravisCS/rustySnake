@@ -26,7 +26,7 @@ struct Snake {
     xvel: i32,
     yvel: i32,
 
-    size: i32,
+    size: usize,
 
     coords: Vec<Coords>,
 
@@ -98,11 +98,47 @@ fn get_direction(mut snakey: Snake, ch: i32) -> Snake {
 
 }
 
+fn print_borders() {
+
+    for i in 2 .. (COLS() - 1) {
+
+        mvprintw(2, i, "X");
+        mvprintw(LINES() - 2, i, "X");
+
+    }
+
+    for i in 2 .. (LINES() - 1) {
+
+        mvprintw(i, 2, "X");
+        mvprintw(i, COLS() - 2, "X");
+
+    }
+
+}
+
+fn move_snake(mut snakey: Snake) -> Snake {
+
+    for i in (1usize .. snakey.size).rev() {
+        
+        snakey.coords[i].ycoord = snakey.coords[i - 1].ycoord;
+        snakey.coords[i].xcoord = snakey.coords[i - 1].xcoord;
+
+    }
+
+    snakey.coords[0].xcoord += snakey.xvel;
+    snakey.coords[0].ycoord += snakey.yvel;
+
+    return snakey;
+
+}
+
 fn main() {
 
     //let set_stri: String = format!("x: {}, y: {}", set.xcoord, set.ycoord);
 
     let mut snakey: Snake = Snake::new();
+
+    snakey.size = 12;
 
     prep_screen();
 
@@ -116,6 +152,13 @@ fn main() {
 
         mvprintw(0,0, "Press 'q' to quit.");
 
+        print_borders();
+
+        let score_stri: String = format!("-Score: {}-", snakey.size);
+
+        mvprintw(2,3, &score_stri);
+
+        snakey = move_snake(snakey);
 
         for i in 0 .. snakey.coords.iter().count() {
 
