@@ -8,6 +8,6 @@ This project was intended to be as similar to the original C program as possible
 
 This program relies on the [_ncurses_ crate](https://crates.io/crates/ncurses), which in turn requires that the C ncurses library be installed on your PC.
 The ncurses crate is ***Not Safe*** due to it not providing any protection against feeding C style format strings to it's functions among other issues.
-More on this problem can be read [here](https://rustsec.org/advisories/RUSTSEC-2019-0006.html).
+More on this problem can be read [here](https://github.com/RustSec/advisory-db/issues/106).
 
 In a future revision of this program I may replace my TUI library to help resolve these security vulnerabilities, the code may also be refactored to be more idiomatic Rust as I learn more going forward.
