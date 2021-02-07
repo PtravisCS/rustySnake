@@ -1,8 +1,9 @@
 extern crate ncurses;
 
 use ncurses::*;
+use rand::Rng;
 
-#[derive(Clone)]
+#[derive(Clone, Copy)]
 struct Coords {
 
     xcoord: i32,
@@ -16,6 +17,15 @@ impl Coords {
     fn new(xcoord: i32, ycoord: i32) -> Coords {
 
         Coords { xcoord: xcoord, ycoord: ycoord }
+
+    }
+
+    fn rand_coords(&mut self) {
+
+        let mut rng = rand::thread_rng();
+
+        self.xcoord = rng.gen_range(3 .. COLS());
+        self.ycoord = rng.gen_range(3 .. LINES());
 
     }
 
@@ -56,7 +66,7 @@ fn prep_screen() {
 
 }
 
-fn end(message: String) {
+fn end(message: &str) {
 
     mvprintw((LINES() - 1) / 2, (COLS() - (message.chars().count() as i32)) / 2, &message);
     
@@ -132,15 +142,65 @@ fn move_snake(mut snakey: Snake) -> Snake {
 
 }
 
+fn test_collision(snakey: &Snake) {
+
+    test_self_collision(snakey);
+    test_lower_bounds_collision(snakey);
+    test_upper_bounds_collision(snakey);
+
+}
+
+fn test_self_collision(snakey: &Snake) {
+
+    for i in 1usize .. snakey.size {
+
+        if snakey.coords[i].ycoord == snakey.coords[0].ycoord && snakey.coords[i].xcoord == snakey.coords[0].xcoord {
+
+            if snakey.xvel != 0 || snakey.yvel != 0 {
+
+                end("Game Over! Press any key to continue");
+
+            }
+
+        }
+
+    }
+
+}
+
+fn test_lower_bounds_collision(snakey: &Snake) {
+
+    if snakey.coords[0].ycoord < 3 || snakey.coords[0].xcoord < 3 {
+
+        end("Game Over! Press any key to continue");
+
+    }
+
+}
+
+fn test_upper_bounds_collision(snakey: &Snake) {
+
+    if snakey.coords[0].ycoord > (LINES() - 3) || snakey.coords[0].xcoord > (COLS() - 3) {
+
+        end("Game Over! Press any key to continue");
+
+    }
+
+}
+
 fn main() {
 
-    //let set_stri: String = format!("x: {}, y: {}", set.xcoord, set.ycoord);
+    prep_screen();
 
     let mut snakey: Snake = Snake::new();
+    let mut pellet: Coords = Coords::new(0, 0);
 
-    snakey.size = 12;
+    pellet.rand_coords();
 
-    prep_screen();
+    snakey.size = 10;
+    snakey.coords[0].xcoord = 3;
+    snakey.coords[0].ycoord = 3;
+
 
     let mut ch: i32 = getch();
 
@@ -160,12 +220,28 @@ fn main() {
 
         snakey = move_snake(snakey);
 
-        for i in 0 .. snakey.coords.iter().count() {
+        test_collision(&snakey);
 
-            let coord_stri: String = format!("x: {}, y: {}", snakey.coords[i].xcoord, snakey.coords[i].ycoord);
-            mvprintw((i+2) as i32, 1, &coord_stri);
+        if snakey.coords[0].ycoord == pellet.ycoord && snakey.coords[0].xcoord == pellet.xcoord {
+
+            snakey.size += 1;
+            pellet.rand_coords();
 
         }
+
+        for i in 0 .. snakey.coords.iter().count() {
+
+            //let coord_stri: String = format!("x: {}, y: {}", snakey.coords[i].xcoord, snakey.coords[i].ycoord);
+            //mvprintw((i+2) as i32, 1, &coord_stri);
+
+            mvprintw(snakey.coords[i].ycoord, snakey.coords[i].xcoord, "*");
+
+        }
+
+        //let coord_stri: String = format!("x: {}, y: {}", pellet.xcoord, pellet.ycoord);
+        //mvprintw(1,1, &coord_stri);
+        
+        mvprintw(pellet.ycoord, pellet.xcoord, "*");
 
         ch = getch();
 
@@ -176,7 +252,7 @@ fn main() {
 
     refresh();
 
-    end("Thanks for playing".to_string());
+    end("Thanks for playing");
 
 
 
