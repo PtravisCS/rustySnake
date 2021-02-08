@@ -197,7 +197,7 @@ fn main() {
 
     pellet.rand_coords();
 
-    snakey.size = 10;
+    snakey.size = 1;
     snakey.coords[0].xcoord = 3;
     snakey.coords[0].ycoord = 3;
 
@@ -238,7 +238,7 @@ fn main() {
 
         }
 
-        //let coord_stri: String = format!("x: {}, y: {}", pellet.xcoord, pellet.ycoord);
+        //let coord_stri: String = format!("x: {}, y: {}", pellet.xcoord, pellet.ycoord); 
         //mvprintw(1,1, &coord_stri);
         
         mvprintw(pellet.ycoord, pellet.xcoord, "*");
