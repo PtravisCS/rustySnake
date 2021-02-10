@@ -1,58 +1,8 @@
 extern crate ncurses;
 
 use ncurses::*;
-use rand::Rng;
-
-#[derive(Clone, Copy)]
-struct Coords {
-
-    xcoord: i32,
-    ycoord: i32,
-
-}
-
-
-impl Coords {
-
-    fn new(xcoord: i32, ycoord: i32) -> Coords {
-
-        Coords { xcoord: xcoord, ycoord: ycoord }
-
-    }
-
-    fn rand_coords(&mut self) {
-
-        let mut rng = rand::thread_rng();
-
-        self.xcoord = rng.gen_range(3 .. COLS());
-        self.ycoord = rng.gen_range(3 .. LINES());
-
-    }
-
-}
-
-struct Snake {
-
-    xvel: i32,
-    yvel: i32,
-
-    size: usize,
-
-    coords: Vec<Coords>,
-
-}
-
-impl Snake {
-
-    fn new() -> Snake {
-
-        let tmp_snake: Snake = Snake {xvel: 0, yvel: 0, size: 0, coords: vec![Coords::new(0,0); 200]};
-
-        return tmp_snake;
-
-    }
-
-}
+//use rand::Rng;
+use snake::game_objects::*;
 
 fn prep_screen() {
 
@@ -195,7 +145,7 @@ fn main() {
     let mut snakey: Snake = Snake::new();
     let mut pellet: Coords = Coords::new(0, 0);
 
-    pellet.rand_coords();
+    pellet.rand_coords(COLS(), LINES());
 
     snakey.size = 1;
     snakey.coords[0].xcoord = 3;
@@ -225,7 +175,7 @@ fn main() {
         if snakey.coords[0].ycoord == pellet.ycoord && snakey.coords[0].xcoord == pellet.xcoord {
 
             snakey.size += 1;
-            pellet.rand_coords();
+            pellet.rand_coords(COLS(), LINES());
 
         }
 
