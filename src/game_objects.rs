@@ -42,9 +42,9 @@ pub struct Snake {
 
 impl Snake {
 
-    pub fn new() -> Snake {
+    pub fn new(x: usize, y: usize) -> Snake {
 
-        let tmp_snake: Snake = Snake {xvel: 0, yvel: 0, size: 0, coords: vec![Coords::new(0,0); 200]};
+        let tmp_snake: Snake = Snake {xvel: 0, yvel: 0, size: 0, coords: vec![Coords::new(0,0); x * y]};
 
         return tmp_snake;
 

@@ -142,7 +142,7 @@ fn main() {
 
     prep_screen();
 
-    let mut snakey: Snake = Snake::new();
+    let mut snakey: Snake = Snake::new((COLS() - 3) as usize, (LINES() - 3) as usize);
     let mut pellet: Coords = Coords::new(0, 0);
 
     pellet.rand_coords(COLS(), LINES());
@@ -174,8 +174,16 @@ fn main() {
 
         if snakey.coords[0].ycoord == pellet.ycoord && snakey.coords[0].xcoord == pellet.xcoord {
 
-            snakey.size += 1;
-            pellet.rand_coords(COLS(), LINES());
+            if snakey.size < ((COLS() - 3) * (LINES() - 3)) as usize {
+
+                snakey.size += 1;
+
+            } else {
+
+                end("Congrats, You Win!");
+            }
+
+            pellet.rand_coords(COLS() - 3, LINES() - 3);
 
         }
 
