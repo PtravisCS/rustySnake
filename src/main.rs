@@ -1,53 +1,117 @@
-extern crate ncurses;
+extern crate termion;
 
-use ncurses::*;
-//use rand::Rng;
+use termion::*;
+use termion::raw::*;
+use termion::event::Key;
+use termion::input::TermRead;
 use snake::game_objects::*;
+use std::io::Write;
+use std::{thread, time};
+
+fn get_cols() -> u16 {
+
+    let dimensions_tuple: (u16, u16) = terminal_size().unwrap();
+
+    let cols: u16 = dimensions_tuple.1;
+
+    return cols;
+}
+
+fn get_rows() -> u16 {
+
+    let dimensions_tuple: (u16, u16) = terminal_size().unwrap();
+
+    let rows: u16 = dimensions_tuple.0;
+
+    return rows;
+
+}
+
+fn refresh_scrn() {
+
+    let mut stdout = std::io::stdout().into_raw_mode().unwrap();
+
+    stdout.flush().unwrap();
+
+}
+
+fn clr_scrn() {
+
+    print!("{}", clear::All);
+
+}
+
+fn up_key() -> event::Key {
+
+    return event::Key::Up;
+
+}
+
+fn down_key() -> event::Key {
+
+    return event::Key::Down;
+
+}
+
+fn left_key() -> event::Key {
+
+    return event::Key::Left;
+
+}
+
+fn right_key() -> event::Key {
+
+    return event::Key::Right;
+
+}
+
+fn no_echo() {
+
+    let mut stdout = std::io::stdout().into_raw_mode().unwrap();
+
+    write!(stdout, "{}", cursor::Hide);
+
+}
 
 fn prep_screen() {
 
-    initscr();
-    clear();
-    noecho();
-    cbreak();
-    timeout(150);
-    curs_set(CURSOR_VISIBILITY::CURSOR_INVISIBLE);
-    keypad(stdscr(), true);
+    clr_scrn();
+    no_echo();
+
+    let mut stdout = std::io::stdout().into_raw_mode().unwrap();
+
+    write!(stdout, "{}{}{}", clear::All, cursor::Goto(1,1), cursor::Hide);
 
 }
 
 fn end(message: &str) {
 
-    mvprintw((LINES() - 1) / 2, (COLS() - (message.chars().count() as i32)) / 2, &message);
+    let mut stdout = std::io::stdout().into_raw_mode().unwrap();
+
+    write!(stdout, "{goto} {str}", goto = cursor::Goto((get_rows() - 1u16) / 2u16, (get_cols() - (message.chars().count() as u16)) / 2u16), str = &message).unwrap();
     
-    timeout(-1);
-
-    getch();
-
-    endwin();
-
     std::process::exit(0);
 
 }
 
-fn get_direction(mut snakey: Snake, ch: i32) -> Snake {
+fn get_direction(mut snakey: Snake, ch: event::Key) -> Snake {
 
-    if ch == KEY_UP {
+    if ch == up_key() {
 
         snakey.xvel = 0;
         snakey.yvel = -1;
 
-    } else if ch == KEY_DOWN {
+    } else if ch == down_key() {
 
         snakey.xvel = 0;
         snakey.yvel = 1;
 
-    } else if ch == KEY_LEFT {
+    } else if ch == left_key() {
 
         snakey.xvel = -1;
         snakey.yvel = 0;
 
-    } else if ch == KEY_RIGHT {
+    } else if ch == right_key() {
 
         snakey.xvel = 1;
         snakey.yvel = 0;
@@ -60,17 +124,17 @@ fn get_direction(mut snakey: Snake, ch: i32) -> Snake {
 
 fn print_borders() {
 
-    for i in 2 .. (COLS() - 1) {
+    let mut stdout = std::io::stdout().into_raw_mode().unwrap();
 
-        mvprintw(2, i, "X");
-        mvprintw(LINES() - 2, i, "X");
+    for i in 2u16 .. (get_cols() - 1u16) {
+
+        write!(stdout, "{goto}X", goto = cursor::Goto(2, i));
 
     }
 
-    for i in 2 .. (LINES() - 1) {
+    for i in 2u16 .. (get_rows() - 1u16) {
 
-        mvprintw(i, 2, "X");
-        mvprintw(i, COLS() - 2, "X");
+        write!(stdout, "{goto}X", goto = cursor::Goto(i, 2));
 
     }
 
@@ -130,7 +194,7 @@ fn test_lower_bounds_collision(snakey: &Snake) {
 
 fn test_upper_bounds_collision(snakey: &Snake) {
 
-    if snakey.coords[0].ycoord > (LINES() - 3) || snakey.coords[0].xcoord > (COLS() - 3) {
+    if snakey.coords[0].ycoord > (get_rows() - 3u16) as i32 || snakey.coords[0].xcoord > (get_cols() - 3u16) as i32 {
 
         end("Game Over! Press any key to continue");
 
@@ -138,35 +202,45 @@ fn test_upper_bounds_collision(snakey: &Snake) {
 
 }
 
+
+
 fn main() {
 
     prep_screen();
 
-    let mut snakey: Snake = Snake::new((COLS() - 3) as usize, (LINES() - 3) as usize);
+    let mut snakey: Snake = Snake::new((get_cols() - 3u16) as usize, (get_rows() - 3u16) as usize);
     let mut pellet: Coords = Coords::new(0, 0);
 
-    pellet.rand_coords(COLS(), LINES());
+    let mut stdout = std::io::stdout().into_raw_mode().unwrap();
+    let stdin = async_stdin();
+
+    let sleep_duration = time::Duration::from_millis(150);
+
+    pellet.rand_coords(get_cols() as i32, get_rows() as i32);
 
     snakey.size = 1;
     snakey.coords[0].xcoord = 3;
     snakey.coords[0].ycoord = 3;
 
+    write!(stdout, "{}{}{}", clear::All, cursor::Goto(1,1), cursor::Hide);
+    refresh_scrn();
 
-    let mut ch: i32 = getch();
+    for ch in (stdin.keys()).unwrap() {
 
-    while ch != 113 { //113 is the ascii representation of q, I can't use 'q' b/c Rust doesn't use ascii but rather uses unicode.
+        match ch {
 
-        snakey = get_direction(snakey, ch);
+            Key::Char('q') => break,
+            _              => snakey = get_direction(snakey, ch),
 
-        clear();
+        }
 
-        mvprintw(0,0, "Press 'q' to quit.");
+        clr_scrn();
+
+        write!(stdout, "{goto}Press 'q' to quit.", goto = cursor::Goto(0u16,0u16));
 
         print_borders();
 
-        let score_stri: String = format!("-Score: {}-", snakey.size);
-
-        mvprintw(2,3, &score_stri);
+        write!(stdout, "{goto}-Score: {}-", goto = cursor::Goto(2u16,3u16));
 
         snakey = move_snake(snakey);
 
@@ -174,7 +248,7 @@ fn main() {
 
         if snakey.coords[0].ycoord == pellet.ycoord && snakey.coords[0].xcoord == pellet.xcoord {
 
-            if snakey.size < ((COLS() - 3) * (LINES() - 3)) as usize {
+            if snakey.size < ((get_cols() - 3u16) * (get_rows() - 3u16)) as usize {
 
                 snakey.size += 1;
 
@@ -183,7 +257,7 @@ fn main() {
                 end("Congrats, You Win!");
             }
 
-            pellet.rand_coords(COLS() - 3, LINES() - 3);
+            pellet.rand_coords((get_cols() - 3u16) as i32, (get_rows() - 3u16) as i32);
 
         }
 
@@ -192,23 +266,23 @@ fn main() {
             //let coord_stri: String = format!("x: {}, y: {}", snakey.coords[i].xcoord, snakey.coords[i].ycoord);
             //mvprintw((i+2) as i32, 1, &coord_stri);
 
-            mvprintw(snakey.coords[i].ycoord, snakey.coords[i].xcoord, "*");
+            write!(stdout, "{goto}*", goto = cursor::Goto(snakey.coords[i].ycoord as u16, snakey.coords[i].xcoord as u16));
 
         }
 
         //let coord_stri: String = format!("x: {}, y: {}", pellet.xcoord, pellet.ycoord); 
         //mvprintw(1,1, &coord_stri);
         
-        mvprintw(pellet.ycoord, pellet.xcoord, "*");
+        write!(stdout, "{goto}*", goto = cursor::Goto(pellet.ycoord as u16, pellet.xcoord as u16));
 
-        ch = getch();
+        thread::sleep(sleep_duration);
 
     }
 
 
     //mvprintw(1,1, &set_stri);
 
-    refresh();
+    refresh_scrn();
 
     end("Thanks for playing");
 
